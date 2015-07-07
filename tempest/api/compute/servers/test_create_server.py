@@ -53,15 +53,18 @@ class ServersTestJSON(base.BaseV2ComputeTest):
         personality = [{'path': '/test.txt',
                        'contents': base64.b64encode(file_contents)}]
         disk_config = cls.disk_config
-        cls.server_initial = cls.create_test_server(name=cls.name,
-                                                    meta=cls.meta,
-                                                    accessIPv4=cls.accessIPv4,
-                                                    accessIPv6=cls.accessIPv6,
-                                                    personality=personality,
-                                                    disk_config=disk_config)
+        cls.server_initial = cls.create_test_server(
+            validatable=True,
+            wait_until='ACTIVE',
+            name=cls.name,
+            meta=cls.meta,
+            accessIPv4=cls.accessIPv4,
+            accessIPv6=cls.accessIPv6,
+            personality=personality,
+            disk_config=disk_config)
         cls.password = cls.server_initial['adminPass']
         cls.client.wait_for_server_status(cls.server_initial['id'], 'ACTIVE')
-        cls.server = cls.client.get_server(cls.server_initial['id'])
+        cls.server = cls.client.show_server(cls.server_initial['id'])
         cls.floating_ip = cls.create_assign_floating_ip(cls.server['id'])
 
     @test.attr(type='smoke')
@@ -101,7 +104,7 @@ class ServersTestJSON(base.BaseV2ComputeTest):
     def test_verify_created_server_vcpus(self):
         # Verify that the number of vcpus reported by the instance matches
         # the amount stated by the flavor
-        flavor = self.flavors_client.get_flavor_details(self.flavor_ref)
+        flavor = self.flavors_client.show_flavor(self.flavor_ref)
         linux_client = remote_client.RemoteClient(self.floating_ip,
                                            self.ssh_user, self.password)
         self.assertEqual(flavor['vcpus'], linux_client.get_number_of_vcpus())
@@ -264,14 +267,14 @@ class ServersWithSpecificFlavorTestJSON(base.BaseV2ComputeAdminTest):
                                 adminPass=admin_pass,
                                 flavor=flavor_with_eph_disk_id))
         # Get partition number of server without extra specs.
-        server_no_eph_disk = self.client.get_server(
+        server_no_eph_disk = self.client.show_server(
             server_no_eph_disk['id'])
         no_disk_ip = self.create_assign_floating_ip(server_no_eph_disk['id'])
         linux_client = remote_client.RemoteClient(no_disk_ip,
                                                   self.ssh_user, admin_pass)
         partition_num = len(linux_client.get_partitions().split('\n'))
 
-        server_with_eph_disk = self.client.get_server(
+        server_with_eph_disk = self.client.show_server(
             server_with_eph_disk['id'])
         disk_ip = self.create_assign_floating_ip(server_with_eph_disk['id'])
         linux_client = remote_client.RemoteClient(disk_ip,

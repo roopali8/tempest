@@ -164,7 +164,7 @@ class AttachInterfacesTestJSON(base.BaseV2ComputeTest):
             self.client.wait_for_interface_status(server['id'], port['port_id'],
                          "ACTIVE")
         # Remove the fixed IP from server.
-        server_detail = self.os.servers_client.get_server(
+        server_detail = self.os.servers_client.show_server(
             server['id'])
         # Get the Fixed IP from server.
         fixed_ip = None
