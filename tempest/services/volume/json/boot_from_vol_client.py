@@ -19,21 +19,21 @@ from tempest_lib import exceptions as lib_exc
 
 from tempest import exceptions
 from tempest import config
-from tempest.services.volume.json.volumes_client import BaseVolumesClientJSON
-from tempest.services.volume.json.snapshots_client import BaseSnapshotsClientJSON
+from tempest.services.volume.json.volumes_client import BaseVolumesClient
+from tempest.services.volume.json.snapshots_client import BaseSnapshotsClient
 
 CONF = config.CONF
 
-class CleanBFVResource(BaseVolumesClientJSON, BaseSnapshotsClientJSON):
+class CleanBFVResource(BaseVolumesClient, BaseSnapshotsClient):
     """
     Client class to clean up the resources created due to boot from volume
     feature. This cleanup will delete any snapshot attached to volume from
     which VM was booted and then volume itself.
     """
     def __init__(self, auth_provider, **kwargs):
-        BaseVolumesClientJSON.__init__(self, auth_provider,
+        BaseVolumesClient.__init__(self, auth_provider,
           default_volume_size=CONF.volume.volume_size, **kwargs)
-        BaseSnapshotsClientJSON.__init__(self, auth_provider, **kwargs)
+        BaseSnapshotsClient.__init__(self, auth_provider, **kwargs)
         
 
     def _wait_for_snapshot_deletion(self, snapshot_id):

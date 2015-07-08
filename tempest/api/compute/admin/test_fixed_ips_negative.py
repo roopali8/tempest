@@ -40,7 +40,7 @@ class FixedIPsNegativeTestJson(base.BaseV2ComputeAdminTest):
     def resource_setup(cls):
         super(FixedIPsNegativeTestJson, cls).resource_setup()
         server = cls.create_test_server(wait_until='ACTIVE')
-        server = cls.servers_client.get_server(server['id'])
+        server = cls.servers_client.show_server(server['id'])
         for ip_set in server['addresses']:
             for ip in server['addresses'][ip_set]:
                 if ip['OS-EXT-IPS:type'] == 'fixed':
@@ -54,7 +54,7 @@ class FixedIPsNegativeTestJson(base.BaseV2ComputeAdminTest):
     @test.services('network')
     def test_list_fixed_ip_details_with_non_admin_user(self):
         self.assertRaises(lib_exc.Forbidden,
-                          self.non_admin_client.get_fixed_ip_details, self.ip)
+                          self.non_admin_client.show_fixed_ip, self.ip)
 
     @test.attr(type=['negative'])
     @test.idempotent_id('ce60042c-fa60-4836-8d43-1c8e3359dc47')

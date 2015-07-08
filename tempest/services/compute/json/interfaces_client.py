@@ -22,7 +22,7 @@ from tempest.common import service_client
 from tempest import exceptions
 
 
-class InterfacesClientJSON(service_client.ServiceClient):
+class InterfacesClient(service_client.ServiceClient):
 
     def list_interfaces(self, server):
         resp, body = self.get('servers/%s/os-interface' % server)
@@ -89,7 +89,7 @@ class InterfacesClientJSON(service_client.ServiceClient):
                 'networkId': network_id
             }
         })
-        resp, body = self.post('servers/%s/action' % str(server_id),
+        resp, body = self.post('servers/%s/action' % server_id,
                                post_body)
         self.validate_response(servers_schema.server_actions_common_schema,
                                resp, body)
@@ -102,7 +102,7 @@ class InterfacesClientJSON(service_client.ServiceClient):
                 'address': ip_address
             }
         })
-        resp, body = self.post('servers/%s/action' % str(server_id),
+        resp, body = self.post('servers/%s/action' % server_id,
                                post_body)
         self.validate_response(servers_schema.server_actions_common_schema,
                                resp, body)

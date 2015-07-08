@@ -47,7 +47,7 @@ class LiveBlockMigrationTestJSON(base.BaseV2ComputeAdminTest):
         ]
 
     def _get_server_details(self, server_id):
-        body = self.admin_servers_client.get_server(server_id)
+        body = self.admin_servers_client.show_server(server_id)
         return body
 
     def _get_host_for_server(self, server_id):
@@ -78,7 +78,7 @@ class LiveBlockMigrationTestJSON(base.BaseV2ComputeAdminTest):
             return server_id
 
     def _volume_clean_up(self, server_id, volume_id):
-        body = self.volumes_client.get_volume(volume_id)
+        body = self.volumes_client.show_volume(volume_id)
         if body['status'] == 'in-use':
             self.servers_client.detach_volume(server_id, volume_id)
             self.volumes_client.wait_for_volume_status(volume_id, 'available')
