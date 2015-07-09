@@ -35,7 +35,7 @@ class ServersTestJSON(base.BaseV2ComputeTest):
         # If an admin password is provided on server creation, the server's
         # root password should be set to that password.
         server = self.create_test_server(adminPass='testpassword')
-
+        self.client.wait_for_server_status(server['id'], "ACTIVE")
         # Verify the password is set correctly in the response
         self.assertEqual('testpassword', server['adminPass'])
 
