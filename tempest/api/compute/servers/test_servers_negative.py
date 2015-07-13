@@ -168,6 +168,7 @@ class ServersNegativeTestJSON(base.BaseV2ComputeTest):
     def test_rebuild_reboot_deleted_server(self):
         # Rebuild and Reboot a deleted server
         server = self.create_test_server()
+        self.client.wait_for_server_status(server['id'], "ACTIVE")
         self.client.delete_server(server['id'])
         self.client.wait_for_server_termination(server['id'])
 

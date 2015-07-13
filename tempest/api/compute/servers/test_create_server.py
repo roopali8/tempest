@@ -65,7 +65,6 @@ class ServersTestJSON(base.BaseV2ComputeTest):
         cls.password = cls.server_initial['adminPass']
         cls.client.wait_for_server_status(cls.server_initial['id'], 'ACTIVE')
         cls.server = cls.client.show_server(cls.server_initial['id'])
-        cls.floating_ip = cls.create_assign_floating_ip(cls.server['id'])
 
     @test.attr(type='smoke')
     @test.idempotent_id('5de47127-9977-400a-936f-abcfbec1218f')
@@ -105,8 +104,9 @@ class ServersTestJSON(base.BaseV2ComputeTest):
         # Verify that the number of vcpus reported by the instance matches
         # the amount stated by the flavor
         flavor = self.flavors_client.show_flavor(self.flavor_ref)
-        linux_client = remote_client.RemoteClient(self.floating_ip,
-                                           self.ssh_user, self.password)
+        linux_client = remote_client.RemoteClient(self.validation_resources[
+                         "floating_ip"]['ip'], self.ssh_user, self.password,
+                    pkey=self.validation_resources["keypair"]['private_key'])
         self.assertEqual(flavor['vcpus'], linux_client.get_number_of_vcpus())
 
     @test.idempotent_id('ac1ad47f-984b-4441-9274-c9079b7a0666')
@@ -114,8 +114,9 @@ class ServersTestJSON(base.BaseV2ComputeTest):
                           'Instance validation tests are disabled.')
     def test_host_name_is_same_as_server_name(self):
         # Verify the instance host name is the same as the server name
-        linux_client = remote_client.RemoteClient(self.floating_ip,
-                                           self.ssh_user, self.password)
+        linux_client = remote_client.RemoteClient(self.validation_resources[
+                         "floating_ip"]['ip'], self.ssh_user, self.password,
+                    pkey=self.validation_resources["keypair"]['private_key'])
         self.assertTrue(linux_client.hostname_equals_servername(self.name))
 
     @test.idempotent_id('ed20d3fb-9d1f-4329-b160-543fbd5d9811')
