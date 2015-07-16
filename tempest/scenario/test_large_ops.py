@@ -95,9 +95,10 @@ class TestLargeOpsScenario(manager.ScenarioTest):
         network = self.get_tenant_network()
         create_kwargs = fixed_network.set_networks_kwarg(network,
                                                          create_kwargs)
-        self.servers_client.create_server(
+        #self.servers_client.create_server(
+        self.create_server(
             name,
-            self.image,
+            '',
             flavor_id,
             **create_kwargs)
         # needed because of bug 1199788
@@ -116,7 +117,7 @@ class TestLargeOpsScenario(manager.ScenarioTest):
         self._wait_for_server_status('ACTIVE')
 
     def _large_ops_scenario(self):
-        self.glance_image_create()
+        #self.glance_image_create()
         self.nova_boot()
 
     @test.idempotent_id('14ba0e78-2ed9-4d17-9659-a48f4756ecb3')

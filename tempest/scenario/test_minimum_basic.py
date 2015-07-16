@@ -50,8 +50,7 @@ class TestMinimumBasicScenario(manager.ScenarioTest):
 
     def nova_boot(self):
         create_kwargs = {'key_name': self.keypair['name']}
-        self.server = self.create_server(image=self.image,
-                                         create_kwargs=create_kwargs)
+        self.server = self.create_server(create_kwargs=create_kwargs)
 
     def nova_list(self):
         servers = self.servers_client.list_servers()
@@ -123,7 +122,8 @@ class TestMinimumBasicScenario(manager.ScenarioTest):
     @test.idempotent_id('bdbb5441-9204-419d-a225-b4fdbfb1a1a8')
     @test.services('compute', 'volume', 'image', 'network')
     def test_minimum_basic_scenario(self):
-        self.glance_image_create()
+        # The below step is disabled as booting from image is not permitted
+        #self.glance_image_create()
         self.nova_keypair_add()
         self.nova_boot()
         self.nova_list()
