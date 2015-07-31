@@ -16,6 +16,7 @@
 
 import json
 import time
+import base64
 
 from six.moves.urllib import parse as urllib
 from tempest_lib import exceptions as lib_exc
@@ -72,6 +73,11 @@ class ServersClient(service_client.ServiceClient):
         if CONF.compute_feature_enabled.boot_from_volume_only:
             kwargs = boot_from_vol_client.set_block_device_mapping_args(
                      image_ref, kwargs)
+        if CONF.compute.env_type == "gate" and "user_data" not in kwargs:
+            user_data = "#!/bin/sh\n"\
+                        "sudo ifconfig eth0 mtu %s" % CONF.compute.mtu_size
+            user_data_base64 = base64.b64encode(user_data).decode('utf-8')
+            kwargs['user_data'] = user_data_base64
         if 'key_name' not in kwargs and CONF.validation.run_validation and \
             CONF.compute.ssh_auth_method == 'keypair' and CONF.compute.keypair_name:
             kwargs['key_name'] = CONF.compute.keypair_name

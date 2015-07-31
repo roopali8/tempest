@@ -294,7 +294,16 @@ ComputeGroup = [
                help='Unallocated floating IP range, which will be used to '
                     'test the floating IP bulk feature for CRUD operation. '
                     'This block must not overlap an existing floating IP '
-                    'pool.')
+                    'pool.'),
+    cfg.StrOpt('env_type',
+               default='prod',
+               choices=['gate', 'prod'],
+               help="Environment type can be gate env which is virtual or "
+                    "production."),
+    cfg.StrOpt('mtu_size',
+               default=1400,
+               help="mtu size to be set when VM is launched. This value will be"
+                    "ignored if env_type is prod.")
 ]
 
 compute_features_group = cfg.OptGroup(name='compute-feature-enabled',
