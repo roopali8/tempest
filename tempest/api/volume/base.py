@@ -14,10 +14,10 @@
 #    under the License.
 
 from oslo_log import log as logging
-from tempest_lib.common.utils import data_utils
 from tempest_lib import exceptions as lib_exc
 
 from tempest.common import fixed_network
+from tempest.common.utils import data_utils
 from tempest import config
 from tempest import exceptions
 import tempest.test
@@ -62,6 +62,7 @@ class BaseVolumeTest(tempest.test.BaseTestCase):
         super(BaseVolumeTest, cls).setup_clients()
         cls.servers_client = cls.os.servers_client
         cls.networks_client = cls.os.networks_client
+        cls.images_client = cls.os.images_client
 
         if cls._api_version == 1:
             cls.snapshots_client = cls.os.snapshots_client

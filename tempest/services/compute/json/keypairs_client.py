@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
+from oslo_serialization import jsonutils as json
 
 from tempest.api_schema.response.compute.v2_1 import keypairs as schema
 from tempest.common import service_client
@@ -32,23 +32,20 @@ class KeyPairsClient(service_client.ServiceClient):
         self.validate_response(schema.list_keypairs, resp, body)
         return service_client.ResponseBodyList(resp, body['keypairs'])
 
-    def show_keypair(self, key_name):
-        resp, body = self.get("os-keypairs/%s" % key_name)
+    def show_keypair(self, keypair_name):
+        resp, body = self.get("os-keypairs/%s" % keypair_name)
         body = json.loads(body)
         self.validate_response(schema.get_keypair, resp, body)
         return service_client.ResponseBody(resp, body['keypair'])
 
-    def create_keypair(self, name, pub_key=None):
-        post_body = {'keypair': {'name': name}}
-        if pub_key:
-            post_body['keypair']['public_key'] = pub_key
-        post_body = json.dumps(post_body)
+    def create_keypair(self, **kwargs):
+        post_body = json.dumps({'keypair': kwargs})
         resp, body = self.post("os-keypairs", body=post_body)
         body = json.loads(body)
         self.validate_response(schema.create_keypair, resp, body)
         return service_client.ResponseBody(resp, body['keypair'])
 
-    def delete_keypair(self, key_name):
-        resp, body = self.delete("os-keypairs/%s" % key_name)
+    def delete_keypair(self, keypair_name):
+        resp, body = self.delete("os-keypairs/%s" % keypair_name)
         self.validate_response(schema.delete_keypair, resp, body)
         return service_client.ResponseBody(resp, body)

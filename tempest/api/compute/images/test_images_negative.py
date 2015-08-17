@@ -12,10 +12,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from tempest_lib.common.utils import data_utils
 from tempest_lib import exceptions as lib_exc
 
 from tempest.api.compute import base
+from tempest.common.utils import data_utils
+from tempest.common import waiters
 from tempest import config
 from tempest import test
 
@@ -74,8 +75,8 @@ class ImagesNegativeTestJSON(base.BaseV2ComputeTest):
     def test_create_image_from_stopped_server(self):
         server = self.create_test_server(wait_until='ACTIVE')
         self.servers_client.stop(server['id'])
-        self.servers_client.wait_for_server_status(server['id'],
-                                                   'SHUTOFF')
+        waiters.wait_for_server_status(self.servers_client,
+                                       server['id'], 'SHUTOFF')
         self.addCleanup(self.servers_client.delete_server, server['id'])
         snapshot_name = data_utils.rand_name('test-snap')
         image = self.create_image_from_server(server['id'],
@@ -92,7 +93,7 @@ class ImagesNegativeTestJSON(base.BaseV2ComputeTest):
         snapshot_name = data_utils.rand_name('test-snap')
         test_uuid = ('a' * 35)
         self.assertRaises(lib_exc.NotFound, self.client.create_image,
-                          test_uuid, snapshot_name)
+                          test_uuid, name=snapshot_name)
 
     @test.attr(type=['negative'])
     @test.idempotent_id('36741560-510e-4cc2-8641-55fe4dfb2437')
@@ -101,7 +102,7 @@ class ImagesNegativeTestJSON(base.BaseV2ComputeTest):
         snapshot_name = data_utils.rand_name('test-snap')
         test_uuid = ('a' * 37)
         self.assertRaises(lib_exc.NotFound, self.client.create_image,
-                          test_uuid, snapshot_name)
+                          test_uuid, name=snapshot_name)
 
     @test.attr(type=['negative'])
     @test.idempotent_id('381acb65-785a-4942-94ce-d8f8c84f1f0f')

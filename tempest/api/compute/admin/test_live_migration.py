@@ -17,6 +17,7 @@
 import testtools
 
 from tempest.api.compute import base
+from tempest.common import waiters
 from tempest import config
 from tempest import test
 
@@ -31,6 +32,7 @@ class LiveBlockMigrationTestJSON(base.BaseV2ComputeAdminTest):
         super(LiveBlockMigrationTestJSON, cls).setup_clients()
         cls.admin_hosts_client = cls.os_adm.hosts_client
         cls.admin_servers_client = cls.os_adm.servers_client
+        cls.admin_migration_client = cls.os_adm.migrations_client
 
     @classmethod
     def resource_setup(cls):
@@ -103,11 +105,21 @@ class LiveBlockMigrationTestJSON(base.BaseV2ComputeAdminTest):
 
         if state == 'PAUSED':
             self.admin_servers_client.pause_server(server_id)
-            self.admin_servers_client.wait_for_server_status(server_id, state)
+            waiters.wait_for_server_status(self.admin_servers_client,
+                                           server_id, state)
 
         self._migrate_server_to(server_id, target_host)
-        self.servers_client.wait_for_server_status(server_id, state)
-        self.assertEqual(target_host, self._get_host_for_server(server_id))
+        waiters.wait_for_server_status(self.servers_client, server_id, state)
+        migration_list = self.admin_migration_client.list_migrations()
+
+        msg = ("Live Migration failed. Migrations list for Instance "
+               "%s: [" % server_id)
+        for live_migration in migration_list:
+            if (live_migration['instance_uuid'] == server_id):
+                msg += "\n%s" % live_migration
+        msg += "]"
+        self.assertEqual(target_host, self._get_host_for_server(server_id),
+                         msg)
 
     @test.idempotent_id('1dce86b8-eb04-4c03-a9d8-9c1dc3ee0c7b')
     @testtools.skipUnless(CONF.compute_feature_enabled.live_migration,
@@ -156,5 +168,6 @@ class LiveBlockMigrationTestJSON(base.BaseV2ComputeAdminTest):
         self.volumes_client.wait_for_volume_status(volume['id'], 'in-use')
 
         self._migrate_server_to(server_id, target_host)
-        self.servers_client.wait_for_server_status(server_id, 'ACTIVE')
+        waiters.wait_for_server_status(self.servers_client,
+                                       server_id, 'ACTIVE')
         self.assertEqual(target_host, self._get_host_for_server(server_id))

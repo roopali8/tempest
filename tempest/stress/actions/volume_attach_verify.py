@@ -12,9 +12,9 @@
 
 import re
 
-from tempest_lib.common.utils import data_utils
-
+from tempest.common.utils import data_utils
 from tempest.common.utils.linux import remote_client
+from tempest.common import waiters
 from tempest import config
 import tempest.stress.stressaction as stressaction
 import tempest.test
@@ -26,7 +26,7 @@ class VolumeVerifyStress(stressaction.StressAction):
 
     def _create_keypair(self):
         keyname = data_utils.rand_name("key")
-        self.key = self.manager.keypairs_client.create_keypair(keyname)
+        self.key = self.manager.keypairs_client.create_keypair(name=keyname)
 
     def _delete_keypair(self):
         self.manager.keypairs_client.delete_keypair(self.key['name'])
@@ -42,8 +42,8 @@ class VolumeVerifyStress(stressaction.StressAction):
                                               self.flavor,
                                               **vm_args)
         self.server_id = server['id']
-        self.manager.servers_client.wait_for_server_status(self.server_id,
-                                                           'ACTIVE')
+        waiters.wait_for_server_status(self.manager.servers_client,
+                                       self.server_id, 'ACTIVE')
 
     def _destroy_vm(self):
         self.logger.info("deleting server: %s" % self.server_id)
@@ -55,11 +55,13 @@ class VolumeVerifyStress(stressaction.StressAction):
         sec_grp_cli = self.manager.security_groups_client
         s_name = data_utils.rand_name('sec_grp')
         s_description = data_utils.rand_name('desc')
-        self.sec_grp = sec_grp_cli.create_security_group(s_name,
-                                                         s_description)
+        self.sec_grp = sec_grp_cli.create_security_group(
+            name=s_name, description=s_description)
         create_rule = sec_grp_cli.create_security_group_rule
-        create_rule(self.sec_grp['id'], 'tcp', 22, 22)
-        create_rule(self.sec_grp['id'], 'icmp', -1, -1)
+        create_rule(parent_group_id=self.sec_grp['id'], ip_protocol='tcp',
+                    from_port=22, to_port=22)
+        create_rule(parent_group_id=self.sec_grp['id'], ip_protocol='icmp',
+                    from_port=-1, to_port=-1)
 
     def _destroy_sec_grp(self):
         sec_grp_cli = self.manager.security_groups_client
@@ -163,7 +165,7 @@ class VolumeVerifyStress(stressaction.StressAction):
         if not self.new_server:
             self.new_server_ops()
 
-    # now we just test is number of partition increased or decrised
+    # now we just test that the number of partitions has increased or decreased
     def part_wait(self, num_match):
         def _part_state():
             self.partitions = self.remote_client.get_partitions().split('\n')
@@ -203,7 +205,7 @@ class VolumeVerifyStress(stressaction.StressAction):
         self.manager.volumes_client.wait_for_volume_status(self.volume['id'],
                                                            'available')
         if self.enable_ssh_verify:
-            self.logger.info("Scanning for block device disapperance on %s"
+            self.logger.info("Scanning for block device disappearance on %s"
                              % self.server_id)
             self.part_wait(self.detach_match_count)
         if self.new_volume:

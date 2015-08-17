@@ -17,9 +17,9 @@ import collections
 import re
 
 from oslo_log import log as logging
-from tempest_lib.common.utils import data_utils
 import testtools
 
+from tempest.common.utils import data_utils
 from tempest import config
 from tempest import exceptions
 from tempest.scenario import manager
@@ -243,8 +243,8 @@ class TestNetworkBasicOps(manager.NetworkScenarioTest):
         self.assertEqual(1, len(port_list))
         old_port = port_list[0]
         interface = self.interface_client.create_interface(
-            server=server['id'],
-            network_id=self.new_net.id)
+            server_id=server['id'],
+            net_id=self.new_net.id)
         self.addCleanup(self.network_client.wait_for_resource_deletion,
                         'port',
                         interface['port_id'])
@@ -338,8 +338,8 @@ class TestNetworkBasicOps(manager.NetworkScenarioTest):
 
         for remote_ip in address_list:
             if should_connect:
-                msg = "Timed out waiting for "
-                "%s to become reachable" % remote_ip
+                msg = ("Timed out waiting for %s to become "
+                       "reachable") % remote_ip
             else:
                 msg = "ip address %s is reachable" % remote_ip
             try:
