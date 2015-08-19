@@ -21,6 +21,7 @@ import testtools
 from tempest.api.compute import base
 from tempest.common.utils import data_utils
 from tempest.common.utils.linux import remote_client
+from tempest.common import waiters
 from tempest import config
 from tempest import test
 
@@ -63,7 +64,8 @@ class ServersTestJSON(base.BaseV2ComputeTest):
             personality=personality,
             disk_config=disk_config)
         cls.password = cls.server_initial['adminPass']
-        cls.client.wait_for_server_status(cls.server_initial['id'], 'ACTIVE')
+        waiters.wait_for_server_status(cls.client, cls.server_initial['id'],
+								'ACTIVE')
         cls.server = cls.client.show_server(cls.server_initial['id'])
 
     def _create_net_subnet_ret_net_from_cidr(self, cidr):
