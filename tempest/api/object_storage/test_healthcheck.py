@@ -28,7 +28,6 @@ class HealthcheckTest(base.BaseObjectTest):
 
     @decorators.skip_because(bug="1", reason='healthcheck file does not '
                                 'exist in ceph server.')
-    @test.attr('gate')
     @test.idempotent_id('db5723b1-f25c-49a9-bfeb-7b5640caf337')
     def test_get_healthcheck(self):
 

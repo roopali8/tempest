@@ -12,8 +12,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-import json
-
+from oslo_serialization import jsonutils as json
 from six.moves.urllib import parse as urllib
 
 from tempest.api_schema.response.compute.v2_1 import agents as schema
@@ -25,7 +24,7 @@ class AgentsClient(service_client.ServiceClient):
     Tests Agents API
     """
 
-    def list_agents(self, params=None):
+    def list_agents(self, **params):
         """List all agent builds."""
         url = 'os-agents'
         if params:
@@ -53,4 +52,5 @@ class AgentsClient(service_client.ServiceClient):
         """Update an agent build."""
         put_body = json.dumps({'para': kwargs})
         resp, body = self.put('os-agents/%s' % agent_id, put_body)
-        return service_client.ResponseBody(resp, self._parse_resp(body))
+        body = json.loads(body)
+        return service_client.ResponseBody(resp, body['agent'])

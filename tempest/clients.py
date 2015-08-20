@@ -41,6 +41,10 @@ from tempest.services.compute.json.extensions_client import \
     ExtensionsClient
 from tempest.services.compute.json.fixed_ips_client import FixedIPsClient
 from tempest.services.compute.json.flavors_client import FlavorsClient
+from tempest.services.compute.json.floating_ip_pools_client import \
+    FloatingIPPoolsClient
+from tempest.services.compute.json.floating_ips_bulk_client import \
+    FloatingIPsBulkClient
 from tempest.services.compute.json.floating_ips_client import \
     FloatingIPsClient
 from tempest.services.compute.json.hosts_client import HostsClient
@@ -61,8 +65,12 @@ from tempest.services.compute.json.quota_classes_client import \
 from tempest.services.compute.json.quotas_client import QuotasClient
 from tempest.services.compute.json.security_group_default_rules_client import \
     SecurityGroupDefaultRulesClient
+from tempest.services.compute.json.security_group_rules_client import \
+    SecurityGroupRulesClient
 from tempest.services.compute.json.security_groups_client import \
     SecurityGroupsClient
+from tempest.services.compute.json.server_groups_client import \
+    ServerGroupsClient
 from tempest.services.compute.json.servers_client import ServersClient
 from tempest.services.compute.json.services_client import ServicesClient
 from tempest.services.compute.json.tenant_networks_client import \
@@ -235,8 +243,8 @@ class Manager(manager.Manager):
         # with identity v2
         if CONF.identity_feature_enabled.api_v2 and \
                 CONF.identity.auth_version == 'v2':
-            # EC2 and S3 clients, if used, will check onfigured AWS credentials
-            # and generate new ones if needed
+            # EC2 and S3 clients, if used, will check configured AWS
+            # credentials and generate new ones if needed
             self.ec2api_client = botoclients.APIClientEC2(self.identity_client)
             self.s3_client = botoclients.ObjectClientS3(self.identity_client)
 
@@ -263,6 +271,8 @@ class Manager(manager.Manager):
             enable_instance_password=CONF.compute_feature_enabled
                 .enable_instance_password,
             **params)
+        self.server_groups_client = ServerGroupsClient(
+            self.auth_provider, **params)
         self.limits_client = LimitsClient(self.auth_provider, **params)
         self.images_client = ImagesClient(self.auth_provider, **params)
         self.keypairs_client = KeyPairsClient(self.auth_provider, **params)
@@ -272,8 +282,14 @@ class Manager(manager.Manager):
         self.flavors_client = FlavorsClient(self.auth_provider, **params)
         self.extensions_client = ExtensionsClient(self.auth_provider,
                                                   **params)
+        self.floating_ip_pools_client = FloatingIPPoolsClient(
+            self.auth_provider, **params)
+        self.floating_ips_bulk_client = FloatingIPsBulkClient(
+            self.auth_provider, **params)
         self.floating_ips_client = FloatingIPsClient(self.auth_provider,
                                                      **params)
+        self.security_group_rules_client = SecurityGroupRulesClient(
+            self.auth_provider, **params)
         self.security_groups_client = SecurityGroupsClient(
             self.auth_provider, **params)
         self.interfaces_client = InterfacesClient(self.auth_provider,
@@ -328,15 +344,25 @@ class Manager(manager.Manager):
     def _set_identity_clients(self):
         params = {
             'service': CONF.identity.catalog_type,
-            'region': CONF.identity.region,
-            'endpoint_type': 'adminURL'
+            'region': CONF.identity.region
         }
         params.update(self.default_params_with_timeout_values)
-
+        params_v2_admin = params.copy()
+        params_v2_admin['endpoint_type'] = CONF.identity.v2_admin_endpoint_type
+        # Client uses admin endpoint type of Keystone API v2
         self.identity_client = IdentityClient(self.auth_provider,
-                                              **params)
+                                              **params_v2_admin)
+        params_v2_public = params.copy()
+        params_v2_public['endpoint_type'] = (
+            CONF.identity.v2_public_endpoint_type)
+        # Client uses public endpoint type of Keystone API v2
+        self.identity_public_client = IdentityClient(self.auth_provider,
+                                                     **params_v2_public)
+        params_v3 = params.copy()
+        params_v3['endpoint_type'] = CONF.identity.v3_endpoint_type
+        # Client uses the endpoint type of Keystone API v3
         self.identity_v3_client = IdentityV3Client(self.auth_provider,
-                                                   **params)
+                                                   **params_v3)
         self.endpoints_client = EndPointClient(self.auth_provider,
                                                **params)
         self.service_client = ServiceClient(self.auth_provider, **params)

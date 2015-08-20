@@ -17,9 +17,10 @@
 import random
 
 from six import moves
-from tempest_lib.common.utils import data_utils
 from tempest_lib import decorators
+
 from tempest.api.image import base
+from tempest.common.utils import data_utils
 from tempest import test
 
 

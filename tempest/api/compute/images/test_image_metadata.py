@@ -15,9 +15,9 @@
 
 import six
 
-from tempest_lib.common.utils import data_utils
-
 from tempest.api.compute import base
+from tempest.common.utils import data_utils
+from tempest.common import waiters
 from tempest import config
 from tempest import test
 
@@ -53,7 +53,7 @@ class ImagesMetadataTestJSON(base.BaseV2ComputeTest):
         cls.images.append(cls.image_id)
         image_file = six.StringIO(('*' * 1024))
         cls.glance_client.update_image(cls.image_id, data=image_file)
-        cls.client.wait_for_image_status(cls.image_id, 'ACTIVE')
+        waiters.wait_for_image_status(cls.client, cls.image_id, 'ACTIVE')
 
     def setUp(self):
         super(ImagesMetadataTestJSON, self).setUp()
