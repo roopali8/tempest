@@ -13,7 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_serialization import jsonutils as json
+import json
+
 from six.moves.urllib import parse as urllib
 from tempest_lib import exceptions as lib_exc
 
@@ -23,7 +24,7 @@ from tempest.common import service_client
 
 class FloatingIPsClient(service_client.ServiceClient):
 
-    def list_floating_ips(self, **params):
+    def list_floating_ips(self, params=None):
         """Returns a list of all floating IPs filtered by any parameters."""
         url = 'os-floating-ips'
         if params:
@@ -98,3 +99,44 @@ class FloatingIPsClient(service_client.ServiceClient):
     def resource_type(self):
         """Returns the primary type of resource this client works with."""
         return 'floating_ip'
+
+    def list_floating_ip_pools(self, params=None):
+        """Returns a list of all floating IP Pools."""
+        url = 'os-floating-ip-pools'
+        if params:
+            url += '?%s' % urllib.urlencode(params)
+
+        resp, body = self.get(url)
+        body = json.loads(body)
+        self.validate_response(schema.list_floating_ip_pools, resp, body)
+        return service_client.ResponseBodyList(resp, body['floating_ip_pools'])
+
+    def create_floating_ips_bulk(self, ip_range, pool, interface):
+        """Allocate floating IPs in bulk."""
+        post_body = {
+            'ip_range': ip_range,
+            'pool': pool,
+            'interface': interface
+        }
+        post_body = json.dumps({'floating_ips_bulk_create': post_body})
+        resp, body = self.post('os-floating-ips-bulk', post_body)
+        body = json.loads(body)
+        self.validate_response(schema.create_floating_ips_bulk, resp, body)
+        return service_client.ResponseBody(resp,
+                                           body['floating_ips_bulk_create'])
+
+    def list_floating_ips_bulk(self):
+        """Returns a list of all floating IPs bulk."""
+        resp, body = self.get('os-floating-ips-bulk')
+        body = json.loads(body)
+        self.validate_response(schema.list_floating_ips_bulk, resp, body)
+        return service_client.ResponseBodyList(resp, body['floating_ip_info'])
+
+    def delete_floating_ips_bulk(self, ip_range):
+        """Deletes the provided floating IPs bulk."""
+        post_body = json.dumps({'ip_range': ip_range})
+        resp, body = self.put('os-floating-ips-bulk/delete', post_body)
+        body = json.loads(body)
+        self.validate_response(schema.delete_floating_ips_bulk, resp, body)
+        data = body['floating_ips_bulk_delete']
+        return service_client.ResponseBodyData(resp, data)

@@ -12,7 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_serialization import jsonutils as json
+import json
+
 from six.moves.urllib import parse as urllib
 
 from tempest.api_schema.response.compute.v2_1 import hosts as schema
@@ -21,7 +22,7 @@ from tempest.common import service_client
 
 class HostsClient(service_client.ServiceClient):
 
-    def list_hosts(self, **params):
+    def list_hosts(self, params=None):
         """Lists all hosts."""
 
         url = 'os-hosts'

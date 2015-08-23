@@ -24,7 +24,7 @@ LOG = logging.getLogger(__name__)
 def cleanup():
     admin_manager = clients.AdminManager()
 
-    body = admin_manager.servers_client.list_servers(all_tenants=True)
+    body = admin_manager.servers_client.list_servers({"all_tenants": True})
     LOG.info("Cleanup::remove %s servers" % len(body['servers']))
     for s in body['servers']:
         try:
@@ -47,7 +47,7 @@ def cleanup():
             pass
 
     secgrp_client = admin_manager.security_groups_client
-    secgrp = secgrp_client.list_security_groups(all_tenants=True)
+    secgrp = secgrp_client.list_security_groups({"all_tenants": True})
     secgrp_del = [grp for grp in secgrp if grp['name'] != 'default']
     LOG.info("Cleanup::remove %s Security Group" % len(secgrp_del))
     for g in secgrp_del:

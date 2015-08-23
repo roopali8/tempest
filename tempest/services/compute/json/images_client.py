@@ -13,20 +13,30 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_serialization import jsonutils as json
+import json
+
 from six.moves.urllib import parse as urllib
 from tempest_lib import exceptions as lib_exc
 
 from tempest.api_schema.response.compute.v2_1 import images as schema
 from tempest.common import service_client
+from tempest.common import waiters
 
 
 class ImagesClient(service_client.ServiceClient):
 
-    def create_image(self, server_id, **kwargs):
+    def create_image(self, server_id, name, meta=None):
         """Creates an image of the original server."""
 
-        post_body = {'createImage': kwargs}
+        post_body = {
+            'createImage': {
+                'name': name,
+            }
+        }
+
+        if meta is not None:
+            post_body['createImage']['metadata'] = meta
+
         post_body = json.dumps(post_body)
         resp, body = self.post('servers/%s/action' % server_id,
                                post_body)
@@ -62,6 +72,10 @@ class ImagesClient(service_client.ServiceClient):
         resp, body = self.delete("images/%s" % image_id)
         self.validate_response(schema.delete, resp, body)
         return service_client.ResponseBody(resp, body)
+
+    def wait_for_image_status(self, image_id, status):
+        """Waits for an image to reach a given status."""
+        waiters.wait_for_image_status(self, image_id, status)
 
     def list_image_metadata(self, image_id):
         """Lists all metadata items for an image."""

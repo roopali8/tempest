@@ -48,11 +48,11 @@ def print_help(venv, root):
 def main(argv):
     root = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
-    if os.environ.get('TOOLS_PATH'):
-        root = os.environ['TOOLS_PATH']
+    if os.environ.get('tools_path'):
+        root = os.environ['tools_path']
     venv = os.path.join(root, '.venv')
-    if os.environ.get('VENV'):
-        venv = os.environ['VENV']
+    if os.environ.get('venv'):
+        venv = os.environ['venv']
 
     pip_requires = os.path.join(root, 'requirements.txt')
     test_requires = os.path.join(root, 'test-requirements.txt')

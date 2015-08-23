@@ -19,7 +19,7 @@ function usage {
 
 testrargs=""
 just_pep8=0
-venv=${VENV:-.venv}
+venv=.venv
 with_venv=tools/with_venv.sh
 serial=0
 always_venv=0

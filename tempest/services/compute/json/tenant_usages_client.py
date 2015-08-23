@@ -13,7 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_serialization import jsonutils as json
+import json
+
 from six.moves.urllib import parse as urllib
 
 from tempest.api_schema.response.compute.v2_1 import tenant_usages as schema
@@ -22,7 +23,7 @@ from tempest.common import service_client
 
 class TenantUsagesClient(service_client.ServiceClient):
 
-    def list_tenant_usages(self, **params):
+    def list_tenant_usages(self, params=None):
         url = 'os-simple-tenant-usage'
         if params:
             url += '?%s' % urllib.urlencode(params)
@@ -32,7 +33,7 @@ class TenantUsagesClient(service_client.ServiceClient):
         self.validate_response(schema.list_tenant_usage, resp, body)
         return service_client.ResponseBodyList(resp, body['tenant_usages'][0])
 
-    def show_tenant_usage(self, tenant_id, **params):
+    def show_tenant_usage(self, tenant_id, params=None):
         url = 'os-simple-tenant-usage/%s' % tenant_id
         if params:
             url += '?%s' % urllib.urlencode(params)

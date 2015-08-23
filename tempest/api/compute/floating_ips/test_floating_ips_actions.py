@@ -13,11 +13,10 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from tempest_lib.common.utils import data_utils
 from tempest_lib import exceptions as lib_exc
 
 from tempest.api.compute.floating_ips import base
-from tempest.common.utils import data_utils
-from tempest.common import waiters
 from tempest import test
 
 
@@ -114,8 +113,7 @@ class FloatingIPsTestJSON(base.BaseFloatingIPsTest):
         # Create server so as to use for Multiple association
         new_name = data_utils.rand_name('floating_server')
         body = self.create_test_server(name=new_name)
-        waiters.wait_for_server_status(self.servers_client,
-                                       body['id'], 'ACTIVE')
+        self.servers_client.wait_for_server_status(body['id'], 'ACTIVE')
         self.new_server_id = body['id']
         self.addCleanup(self.servers_client.delete_server, self.new_server_id)
 

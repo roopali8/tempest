@@ -14,16 +14,17 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+import json
 import time
 import base64
 
-from oslo_serialization import jsonutils as json
 from six.moves.urllib import parse as urllib
 from tempest_lib import exceptions as lib_exc
 
 from tempest.services.volume.json import boot_from_vol_client
 from tempest.api_schema.response.compute.v2_1 import servers as schema
 from tempest.common import service_client
+from tempest.common import waiters
 from tempest import exceptions
 from tempest import config
 
@@ -171,22 +172,37 @@ class ServersClient(service_client.ServiceClient):
                   'os-extended-volumes:volumes_attached'][0]['id']])
         return service_client.ResponseBody(resp, body)
 
-    def list_servers(self, detail=False, **params):
+    def list_servers(self, params=None):
         """Lists all servers for a user."""
 
         url = 'servers'
-        _schema = schema.list_servers
-
-        if detail:
-            url += '/detail'
-            _schema = schema.list_servers_detail
         if params:
             url += '?%s' % urllib.urlencode(params)
 
         resp, body = self.get(url)
         body = json.loads(body)
-        self.validate_response(_schema, resp, body)
+        self.validate_response(schema.list_servers, resp, body)
         return service_client.ResponseBody(resp, body)
+
+    def list_servers_with_detail(self, params=None):
+        """Lists all servers in detail for a user."""
+
+        url = 'servers/detail'
+        if params:
+            url += '?%s' % urllib.urlencode(params)
+
+        resp, body = self.get(url)
+        body = json.loads(body)
+        self.validate_response(schema.list_servers_detail, resp, body)
+        return service_client.ResponseBody(resp, body)
+
+    def wait_for_server_status(self, server_id, status, extra_timeout=0,
+                               raise_on_error=True, ready_wait=True):
+        """Waits for a server to reach a given status."""
+        return waiters.wait_for_server_status(self, server_id, status,
+                                              extra_timeout=extra_timeout,
+                                              raise_on_error=raise_on_error,
+                                              ready_wait=ready_wait)
 
     def wait_for_server_termination(self, server_id, ignore_error=False):
         """Waits for server to reach termination."""
@@ -542,3 +558,41 @@ class ServersClient(service_client.ServiceClient):
         return self.action(server_id, "os-getVNCConsole",
                            "console", schema.get_vnc_console,
                            type=console_type)
+
+    def create_server_group(self, name, policies):
+        """
+        Create the server group
+        name : Name of the server-group
+        policies : List of the policies - affinity/anti-affinity)
+        """
+        post_body = {
+            'name': name,
+            'policies': policies,
+        }
+
+        post_body = json.dumps({'server_group': post_body})
+        resp, body = self.post('os-server-groups', post_body)
+
+        body = json.loads(body)
+        self.validate_response(schema.create_get_server_group, resp, body)
+        return service_client.ResponseBody(resp, body['server_group'])
+
+    def delete_server_group(self, server_group_id):
+        """Delete the given server-group."""
+        resp, body = self.delete("os-server-groups/%s" % server_group_id)
+        self.validate_response(schema.delete_server_group, resp, body)
+        return service_client.ResponseBody(resp, body)
+
+    def list_server_groups(self):
+        """List the server-groups."""
+        resp, body = self.get("os-server-groups")
+        body = json.loads(body)
+        self.validate_response(schema.list_server_groups, resp, body)
+        return service_client.ResponseBodyList(resp, body['server_groups'])
+
+    def get_server_group(self, server_group_id):
+        """Get the details of given server_group."""
+        resp, body = self.get("os-server-groups/%s" % server_group_id)
+        body = json.loads(body)
+        self.validate_response(schema.create_get_server_group, resp, body)
+        return service_client.ResponseBody(resp, body['server_group'])

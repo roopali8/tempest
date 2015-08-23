@@ -14,10 +14,9 @@
 #    under the License.
 
 from oslo_log import log as logging
+from tempest_lib.common.utils import data_utils
 
 from tempest.api.compute import base
-from tempest.common.utils import data_utils
-from tempest.common import waiters
 from tempest import config
 from tempest import test
 
@@ -38,8 +37,8 @@ class ImagesOneServerTestJSON(base.BaseV2ComputeTest):
         super(ImagesOneServerTestJSON, self).setUp()
         # Check if the server is in a clean state after test
         try:
-            waiters.wait_for_server_status(self.servers_client,
-                                           self.server_id, 'ACTIVE')
+            self.servers_client.wait_for_server_status(self.server_id,
+                                                       'ACTIVE')
         except Exception:
             LOG.exception('server %s timed out to become ACTIVE. rebuilding'
                           % self.server_id)
@@ -80,10 +79,9 @@ class ImagesOneServerTestJSON(base.BaseV2ComputeTest):
         # Create a new image
         name = data_utils.rand_name('image')
         meta = {'image_type': 'test'}
-        body = self.client.create_image(self.server_id, name=name,
-                                        metadata=meta)
+        body = self.client.create_image(self.server_id, name, meta)
         image_id = data_utils.parse_image_id(body.response['location'])
-        waiters.wait_for_image_status(self.client, image_id, 'ACTIVE')
+        self.client.wait_for_image_status(image_id, 'ACTIVE')
 
         # Verify the image was created correctly
         image = self.client.show_image(image_id)
@@ -113,6 +111,6 @@ class ImagesOneServerTestJSON(base.BaseV2ComputeTest):
         # #1370954 in glance which will 500 if mysql is used as the
         # backend and it attempts to store a 4 byte utf-8 character
         utf8_name = data_utils.rand_name('\xe2\x82\xa1')
-        body = self.client.create_image(self.server_id, name=utf8_name)
+        body = self.client.create_image(self.server_id, utf8_name)
         image_id = data_utils.parse_image_id(body.response['location'])
         self.addCleanup(self.client.delete_image, image_id)

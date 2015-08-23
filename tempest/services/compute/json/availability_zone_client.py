@@ -13,7 +13,7 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_serialization import jsonutils as json
+import json
 
 from tempest.api_schema.response.compute.v2_1 import availability_zone \
     as schema

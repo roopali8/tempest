@@ -12,7 +12,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_serialization import jsonutils as json
+import json
+
 from six.moves.urllib import parse as urllib
 
 from tempest.api_schema.response.compute.v2_1 import baremetal_nodes \
@@ -25,7 +26,7 @@ class BaremetalNodesClient(service_client.ServiceClient):
     Tests Baremetal API
     """
 
-    def list_baremetal_nodes(self, **params):
+    def list_baremetal_nodes(self, params=None):
         """List all baremetal nodes."""
         url = 'os-baremetal-nodes'
         if params:

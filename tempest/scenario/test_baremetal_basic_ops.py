@@ -15,7 +15,6 @@
 
 from oslo_log import log as logging
 
-from tempest.common import waiters
 from tempest import config
 from tempest.scenario import manager
 from tempest import test
@@ -53,13 +52,11 @@ class BaremetalBasicOps(manager.BaremetalScenarioTest):
         self.assertEqual(self.node['uuid'], node['uuid'])
         self.node = node
 
-        waiters.wait_for_server_status(
-            self.servers_client,
+        self.servers_client.wait_for_server_status(
             server_id=self.instance['id'],
             status='REBUILD',
             ready_wait=False)
-        waiters.wait_for_server_status(
-            self.servers_client,
+        self.servers_client.wait_for_server_status(
             server_id=self.instance['id'],
             status='ACTIVE')
 

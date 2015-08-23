@@ -13,7 +13,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_serialization import jsonutils as json
+import json
+
 from tempest_lib import exceptions as lib_exc
 
 from tempest.api_schema.response.compute.v2_1 import aggregates as schema
@@ -45,9 +46,13 @@ class AggregatesClient(service_client.ServiceClient):
         self.validate_response(schema.create_aggregate, resp, body)
         return service_client.ResponseBody(resp, body['aggregate'])
 
-    def update_aggregate(self, aggregate_id, **kwargs):
+    def update_aggregate(self, aggregate_id, name, availability_zone=None):
         """Update a aggregate."""
-        put_body = json.dumps({'aggregate': kwargs})
+        put_body = {
+            'name': name,
+            'availability_zone': availability_zone
+        }
+        put_body = json.dumps({'aggregate': put_body})
         resp, body = self.put('os-aggregates/%s' % aggregate_id, put_body)
 
         body = json.loads(body)
@@ -72,27 +77,36 @@ class AggregatesClient(service_client.ServiceClient):
         """Returns the primary type of resource this client works with."""
         return 'aggregate'
 
-    def add_host(self, aggregate_id, **kwargs):
+    def add_host(self, aggregate_id, host):
         """Adds a host to the given aggregate."""
-        post_body = json.dumps({'add_host': kwargs})
+        post_body = {
+            'host': host,
+        }
+        post_body = json.dumps({'add_host': post_body})
         resp, body = self.post('os-aggregates/%s/action' % aggregate_id,
                                post_body)
         body = json.loads(body)
         self.validate_response(schema.aggregate_add_remove_host, resp, body)
         return service_client.ResponseBody(resp, body['aggregate'])
 
-    def remove_host(self, aggregate_id, **kwargs):
+    def remove_host(self, aggregate_id, host):
         """Removes a host from the given aggregate."""
-        post_body = json.dumps({'remove_host': kwargs})
+        post_body = {
+            'host': host,
+        }
+        post_body = json.dumps({'remove_host': post_body})
         resp, body = self.post('os-aggregates/%s/action' % aggregate_id,
                                post_body)
         body = json.loads(body)
         self.validate_response(schema.aggregate_add_remove_host, resp, body)
         return service_client.ResponseBody(resp, body['aggregate'])
 
-    def set_metadata(self, aggregate_id, **kwargs):
+    def set_metadata(self, aggregate_id, meta):
         """Replaces the aggregate's existing metadata with new metadata."""
-        post_body = json.dumps({'set_metadata': kwargs})
+        post_body = {
+            'metadata': meta,
+        }
+        post_body = json.dumps({'set_metadata': post_body})
         resp, body = self.post('os-aggregates/%s/action' % aggregate_id,
                                post_body)
         body = json.loads(body)
