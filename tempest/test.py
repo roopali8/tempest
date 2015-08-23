@@ -15,6 +15,7 @@
 
 import atexit
 import functools
+import json
 import os
 import re
 import sys
@@ -24,7 +25,6 @@ import uuid
 
 import fixtures
 from oslo_log import log as logging
-from oslo_serialization import jsonutils as json
 from oslo_utils import importutils
 import six
 import testscenarios
@@ -43,8 +43,8 @@ LOG = logging.getLogger(__name__)
 CONF = config.CONF
 
 
-def attr(**kwargs):
-    """A decorator which applies the testtools attr decorator
+def attr(*args, **kwargs):
+    """A decorator which applies the  testtools attr decorator
 
     This decorator applies the testtools.testcase.attr if it is in the list of
     attributes to testtools we want to apply.
@@ -98,7 +98,7 @@ def get_service_list():
     return service_list
 
 
-def services(*args):
+def services(*args, **kwargs):
     """A decorator used to set an attr for each service used in a test case
 
     This decorator applies a testtools attr for each service that gets
@@ -128,7 +128,7 @@ def services(*args):
     return decorator
 
 
-def stresstest(**kwargs):
+def stresstest(*args, **kwargs):
     """Add stress test decorator
 
     For all functions with this decorator a attr stress will be
@@ -154,7 +154,7 @@ def stresstest(**kwargs):
     return decorator
 
 
-def requires_ext(**kwargs):
+def requires_ext(*args, **kwargs):
     """A decorator to skip tests if an extension is not enabled
 
     @param extension

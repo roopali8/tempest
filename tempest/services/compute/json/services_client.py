@@ -14,7 +14,8 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_serialization import jsonutils as json
+import json
+
 from six.moves.urllib import parse as urllib
 
 from tempest.api_schema.response.compute.v2_1 import services as schema
@@ -23,7 +24,7 @@ from tempest.common import service_client
 
 class ServicesClient(service_client.ServiceClient):
 
-    def list_services(self, **params):
+    def list_services(self, params=None):
         url = 'os-services'
         if params:
             url += '?%s' % urllib.urlencode(params)

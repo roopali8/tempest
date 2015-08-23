@@ -16,7 +16,6 @@
 from oslo_log import log as logging
 import testtools
 
-from tempest.common import waiters
 from tempest import config
 from tempest.scenario import manager
 from tempest import test
@@ -59,14 +58,14 @@ class TestServerAdvancedOps(manager.ScenarioTest):
         LOG.debug("Resizing instance %s from flavor %s to flavor %s",
                   instance['id'], instance['flavor']['id'], resize_flavor)
         self.servers_client.resize(instance_id, resize_flavor)
-        waiters.wait_for_server_status(self.servers_client, instance_id,
-                                       'VERIFY_RESIZE')
+        self.servers_client.wait_for_server_status(instance_id,
+                                                   'VERIFY_RESIZE')
 
         LOG.debug("Confirming resize of instance %s", instance_id)
         self.servers_client.confirm_resize(instance_id)
 
-        waiters.wait_for_server_status(self.servers_client, instance_id,
-                                       'ACTIVE')
+        self.servers_client.wait_for_server_status(instance_id,
+                                                   'ACTIVE')
 
     @test.idempotent_id('949da7d5-72c8-4808-8802-e3d70df98e2c')
     @testtools.skipUnless(CONF.compute_feature_enabled.suspend,
@@ -79,23 +78,23 @@ class TestServerAdvancedOps(manager.ScenarioTest):
         LOG.debug("Suspending instance %s. Current status: %s",
                   instance_id, instance['status'])
         self.servers_client.suspend_server(instance_id)
-        waiters.wait_for_server_status(self.servers_client, instance_id,
-                                       'SUSPENDED')
+        self.servers_client.wait_for_server_status(instance_id,
+                                                   'SUSPENDED')
         fetched_instance = self.servers_client.show_server(instance_id)
         LOG.debug("Resuming instance %s. Current status: %s",
                   instance_id, fetched_instance['status'])
         self.servers_client.resume_server(instance_id)
-        waiters.wait_for_server_status(self.servers_client, instance_id,
-                                       'ACTIVE')
+        self.servers_client.wait_for_server_status(instance_id,
+                                                   'ACTIVE')
         fetched_instance = self.servers_client.show_server(instance_id)
         LOG.debug("Suspending instance %s. Current status: %s",
                   instance_id, fetched_instance['status'])
         self.servers_client.suspend_server(instance_id)
-        waiters.wait_for_server_status(self.servers_client, instance_id,
-                                       'SUSPENDED')
+        self.servers_client.wait_for_server_status(instance_id,
+                                                   'SUSPENDED')
         fetched_instance = self.servers_client.show_server(instance_id)
         LOG.debug("Resuming instance %s. Current status: %s",
                   instance_id, fetched_instance['status'])
         self.servers_client.resume_server(instance_id)
-        waiters.wait_for_server_status(self.servers_client, instance_id,
-                                       'ACTIVE')
+        self.servers_client.wait_for_server_status(instance_id,
+                                                   'ACTIVE')

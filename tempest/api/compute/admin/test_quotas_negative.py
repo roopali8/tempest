@@ -12,11 +12,11 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from tempest_lib.common.utils import data_utils
 from tempest_lib import decorators
 from tempest_lib import exceptions as lib_exc
 
 from tempest.api.compute import base
-from tempest.common.utils import data_utils
 from tempest import config
 from tempest import test
 
@@ -32,7 +32,6 @@ class QuotasAdminNegativeTestJSON(base.BaseV2ComputeAdminTest):
         cls.client = cls.os.quotas_client
         cls.adm_client = cls.os_adm.quotas_client
         cls.sg_client = cls.security_groups_client
-        cls.sgr_client = cls.security_group_rules_client
 
     @classmethod
     def resource_setup(cls):
@@ -110,10 +109,7 @@ class QuotasAdminNegativeTestJSON(base.BaseV2ComputeAdminTest):
 
         quota_set = self.adm_client.show_quota_set(self.demo_tenant_id)
         default_sg_quota = quota_set['security_groups']
-
-        # Set the quota to number of used security groups
-        sg_quota = self.limits_client.show_limits()['absolute'][
-            'totalSecurityGroupsUsed']
+        sg_quota = 0  # Set the quota to zero to conserve resources
 
         quota_set =\
             self.adm_client.update_quota_set(self.demo_tenant_id,
@@ -129,7 +125,7 @@ class QuotasAdminNegativeTestJSON(base.BaseV2ComputeAdminTest):
         # will be raised when out of quota
         self.assertRaises((lib_exc.Forbidden, lib_exc.OverLimit),
                           self.sg_client.create_security_group,
-                          name="sg-overlimit", description="sg-desc")
+                          "sg-overlimit", "sg-desc")
 
     @decorators.skip_because(bug="1186354",
                              condition=CONF.service_available.neutron)
@@ -157,8 +153,7 @@ class QuotasAdminNegativeTestJSON(base.BaseV2ComputeAdminTest):
         s_name = data_utils.rand_name('securitygroup')
         s_description = data_utils.rand_name('description')
         securitygroup =\
-            self.sg_client.create_security_group(name=s_name,
-                                                 description=s_description)
+            self.sg_client.create_security_group(s_name, s_description)
         self.addCleanup(self.sg_client.delete_security_group,
                         securitygroup['id'])
 
@@ -169,6 +164,5 @@ class QuotasAdminNegativeTestJSON(base.BaseV2ComputeAdminTest):
         # A 403 Forbidden or 413 Overlimit (old behaviour) exception
         # will be raised when out of quota
         self.assertRaises((lib_exc.OverLimit, lib_exc.Forbidden),
-                          self.sgr_client.create_security_group_rule,
-                          parent_group_id=secgroup_id, ip_protocol=ip_protocol,
-                          from_port=1025, to_port=1025)
+                          self.sg_client.create_security_group_rule,
+                          secgroup_id, ip_protocol, 1025, 1025)

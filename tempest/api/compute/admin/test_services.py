@@ -37,7 +37,8 @@ class ServicesAdminTestJSON(base.BaseV2ComputeAdminTest):
     @test.idempotent_id('f345b1ec-bc6e-4c38-a527-3ca2bc00bef5')
     def test_get_service_by_service_binary_name(self):
         binary_name = 'nova-compute'
-        services = self.client.list_services(binary=binary_name)
+        params = {'binary': binary_name}
+        services = self.client.list_services(params)
         self.assertNotEqual(0, len(services))
         for service in services:
             self.assertEqual(binary_name, service['binary'])
@@ -48,8 +49,9 @@ class ServicesAdminTestJSON(base.BaseV2ComputeAdminTest):
         host_name = services[0]['host']
         services_on_host = [service for service in services if
                             service['host'] == host_name]
+        params = {'host': host_name}
 
-        services = self.client.list_services(host=host_name)
+        services = self.client.list_services(params)
 
         # we could have a periodic job checkin between the 2 service
         # lookups, so only compare binary lists.
@@ -65,9 +67,9 @@ class ServicesAdminTestJSON(base.BaseV2ComputeAdminTest):
         services = self.client.list_services()
         host_name = services[0]['host']
         binary_name = services[0]['binary']
+        params = {'host': host_name, 'binary': binary_name}
 
-        services = self.client.list_services(host=host_name,
-                                             binary=binary_name)
+        services = self.client.list_services(params)
         self.assertEqual(1, len(services))
         self.assertEqual(host_name, services[0]['host'])
         self.assertEqual(binary_name, services[0]['binary'])

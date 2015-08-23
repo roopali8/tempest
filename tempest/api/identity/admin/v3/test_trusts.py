@@ -14,12 +14,12 @@ import datetime
 import re
 
 from oslo_utils import timeutils
+from tempest_lib.common.utils import data_utils
 from tempest_lib import exceptions as lib_exc
 
 from tempest.api.identity import base
 from tempest import clients
 from tempest.common import cred_provider
-from tempest.common.utils import data_utils
 from tempest import config
 from tempest import test
 
@@ -245,7 +245,7 @@ class TrustsV3TestJSON(BaseTrustsV3Test):
 
     @test.idempotent_id('3e48f95d-e660-4fa9-85e0-5a3d85594384')
     def test_trust_expire_invalid(self):
-        # Test case to check we can check an invalid expiry time
+        # Test case to check we can check an invlaid expiry time
         # is rejected with the correct error
         # with an expiry specified
         expires_str = 'bad.123Z'

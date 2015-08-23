@@ -17,7 +17,6 @@ import testtools
 
 from tempest.api.compute import base
 from tempest.common.utils.linux import remote_client
-from tempest.common import waiters
 from tempest import config
 from tempest import test
 
@@ -44,8 +43,6 @@ class AttachVolumeTestJSON(base.BaseV2ComputeTest):
 
     @classmethod
     def resource_setup(cls):
-        cls.set_validation_resources()
-
         super(AttachVolumeTestJSON, cls).resource_setup()
         cls.device = CONF.compute.volume_device_name
 
@@ -64,10 +61,8 @@ class AttachVolumeTestJSON(base.BaseV2ComputeTest):
     def _create_and_attach(self):
         # Start a server and wait for it to become ready
         admin_pass = self.image_ssh_password
-        self.server = self.create_test_server(
-            validatable=True,
-            wait_until='ACTIVE',
-            adminPass=admin_pass)
+        self.server = self.create_test_server(wait_until='ACTIVE',
+                                              adminPass=admin_pass)
 
         # Record addresses so that we can ssh later
         self.server['addresses'] = (
@@ -98,38 +93,29 @@ class AttachVolumeTestJSON(base.BaseV2ComputeTest):
         self._create_and_attach()
 
         self.servers_client.stop(self.server['id'])
-        waiters.wait_for_server_status(self.servers_client, self.server['id'],
-                                       'SHUTOFF')
+        self.servers_client.wait_for_server_status(self.server['id'],
+                                                   'SHUTOFF')
 
         self.servers_client.start(self.server['id'])
-        waiters.wait_for_server_status(self.servers_client, self.server['id'],
-                                       'ACTIVE')
+        self.servers_client.wait_for_server_status(self.server['id'], 'ACTIVE')
 
-        linux_client = remote_client.RemoteClient(
-            self.get_server_ip(self.server),
-            self.image_ssh_user,
-            self.server['adminPass'],
-            self.validation_resources['keypair']['private_key'])
-
+        ip_addr = self.create_assign_floating_ip(self.server['id'])
+        linux_client = remote_client.RemoteClient(ip_addr,
+                                self.ssh_user, self.server['adminPass'])
         partitions = linux_client.get_partitions()
         self.assertIn(self.device, partitions)
 
         self._detach(self.server['id'], self.volume['id'])
         self.attachment = None
         self.servers_client.stop(self.server['id'])
-        waiters.wait_for_server_status(self.servers_client, self.server['id'],
-                                       'SHUTOFF')
+        self.servers_client.wait_for_server_status(self.server['id'],
+                                                   'SHUTOFF')
 
         self.servers_client.start(self.server['id'])
-        waiters.wait_for_server_status(self.servers_client, self.server['id'],
-                                       'ACTIVE')
+        self.servers_client.wait_for_server_status(self.server['id'], 'ACTIVE')
 
-        linux_client = remote_client.RemoteClient(
-            self.get_server_ip(self.server),
-            self.image_ssh_user,
-            self.server['adminPass'],
-            self.validation_resources['keypair']['private_key'])
-
+        linux_client = remote_client.RemoteClient(ip_addr,
+                              self.ssh_user, self.server['adminPass'])
         partitions = linux_client.get_partitions()
         self.assertNotIn(self.device, partitions)
 

@@ -16,10 +16,10 @@
 import six
 
 from oslo_log import log as logging
+from tempest_lib.common.utils import data_utils
 from tempest_lib import exceptions as lib_exc
 
 from tempest.api.compute import base
-from tempest.common.utils import data_utils
 from tempest import config
 from tempest import test
 
@@ -52,13 +52,11 @@ class AuthorizationTestJSON(base.BaseV2ComputeTest):
         cls.glance_client = cls.os.image_client
         cls.keypairs_client = cls.os.keypairs_client
         cls.security_client = cls.os.security_groups_client
-        cls.rule_client = cls.os.security_group_rules_client
 
         cls.alt_client = cls.alt_manager.servers_client
         cls.alt_images_client = cls.alt_manager.images_client
         cls.alt_keypairs_client = cls.alt_manager.keypairs_client
         cls.alt_security_client = cls.alt_manager.security_groups_client
-        cls.alt_rule_client = cls.alt_manager.security_group_rules_client
 
     @classmethod
     def resource_setup(cls):
@@ -78,20 +76,19 @@ class AuthorizationTestJSON(base.BaseV2ComputeTest):
         cls.image = cls.images_client.show_image(image_id)
 
         cls.keypairname = data_utils.rand_name('keypair')
-        cls.keypairs_client.create_keypair(name=cls.keypairname)
+        cls.keypairs_client.create_keypair(cls.keypairname)
 
         name = data_utils.rand_name('security')
         description = data_utils.rand_name('description')
         cls.security_group = cls.security_client.create_security_group(
-            name=name, description=description)
+            name, description)
 
         parent_group_id = cls.security_group['id']
         ip_protocol = 'tcp'
         from_port = 22
         to_port = 22
-        cls.rule = cls.rule_client.create_security_group_rule(
-            parent_group_id=parent_group_id, ip_protocol=ip_protocol,
-            from_port=from_port, to_port=to_port)
+        cls.rule = cls.security_client.create_security_group_rule(
+            parent_group_id, ip_protocol, from_port, to_port)
 
     @classmethod
     def resource_cleanup(cls):
@@ -174,7 +171,7 @@ class AuthorizationTestJSON(base.BaseV2ComputeTest):
         # A create image request for another user's server should fail
         self.assertRaises(lib_exc.NotFound,
                           self.alt_images_client.create_image,
-                          self.server['id'], name='testImage')
+                          self.server['id'], 'testImage')
 
     @test.idempotent_id('95d445f6-babc-4f2e-aea3-aa24ec5e7f0d')
     def test_create_server_with_unauthorized_image(self):
@@ -210,8 +207,7 @@ class AuthorizationTestJSON(base.BaseV2ComputeTest):
             resp = {}
             resp['status'] = None
             self.assertRaises(lib_exc.BadRequest,
-                              self.alt_keypairs_client.create_keypair,
-                              name=k_name)
+                              self.alt_keypairs_client.create_keypair, k_name)
         finally:
             # Next request the base_url is back to normal
             if (resp['status'] is not None):
@@ -263,7 +259,7 @@ class AuthorizationTestJSON(base.BaseV2ComputeTest):
             resp['status'] = None
             self.assertRaises(lib_exc.BadRequest,
                               self.alt_security_client.create_security_group,
-                              name=s_name, description=s_description)
+                              s_name, s_description)
         finally:
             # Next request the base_url is back to normal
             if resp['status'] is not None:
@@ -296,22 +292,21 @@ class AuthorizationTestJSON(base.BaseV2ComputeTest):
         to_port = -1
         try:
             # Change the base URL to impersonate another user
-            self.alt_rule_client.auth_provider.set_alt_auth_data(
+            self.alt_security_client.auth_provider.set_alt_auth_data(
                 request_part='url',
-                auth_data=self.rule_client.auth_provider.auth_data
+                auth_data=self.security_client.auth_provider.auth_data
             )
             resp = {}
             resp['status'] = None
             self.assertRaises(lib_exc.BadRequest,
-                              self.alt_rule_client.
+                              self.alt_security_client.
                               create_security_group_rule,
-                              parent_group_id=parent_group_id,
-                              ip_protocol=ip_protocol,
-                              from_port=from_port, to_port=to_port)
+                              parent_group_id, ip_protocol, from_port,
+                              to_port)
         finally:
             # Next request the base_url is back to normal
             if resp['status'] is not None:
-                self.alt_rule_client.delete_security_group_rule(resp['id'])
+                self.alt_security_client.delete_security_group_rule(resp['id'])
                 LOG.error("Create security group rule request should not "
                           "happen if the tenant id does not match the"
                           " current user")
@@ -321,7 +316,7 @@ class AuthorizationTestJSON(base.BaseV2ComputeTest):
         # A DELETE request for another user's security group rule
         # should fail
         self.assertRaises(lib_exc.NotFound,
-                          self.alt_rule_client.delete_security_group_rule,
+                          self.alt_security_client.delete_security_group_rule,
                           self.rule['id'])
 
     @test.idempotent_id('c5f52351-53d9-4fc9-83e5-917f7f5e3d71')

@@ -11,9 +11,8 @@
 #    under the License.
 
 from oslo_log import log
+from tempest_lib.common.utils import data_utils
 
-from tempest.common.utils import data_utils
-from tempest.common import waiters
 from tempest import config
 from tempest.scenario import manager
 from tempest import test
@@ -86,8 +85,7 @@ class TestVolumeBootPattern(manager.ScenarioTest):
         for i in instances:
             self.servers_client.stop(i['id'])
         for i in instances:
-            waiters.wait_for_server_status(self.servers_client,
-                                           i['id'], 'SHUTOFF')
+            self.servers_client.wait_for_server_status(i['id'], 'SHUTOFF')
 
     def _detach_volumes(self, volumes):
         # NOTE(gfidente): two loops so we do not wait for the status twice
@@ -106,7 +104,8 @@ class TestVolumeBootPattern(manager.ScenarioTest):
                 floating_ip['ip'], server['id'])
             ip = floating_ip['ip']
         else:
-            ip = server
+            network_name_for_ssh = CONF.compute.network_for_ssh
+            ip = server.networks[network_name_for_ssh][0]
 
         return self.get_remote_client(ip, private_key=keypair['private_key'],
                                       log_console_of_servers=[server])

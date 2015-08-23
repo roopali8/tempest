@@ -13,12 +13,15 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_serialization import jsonutils as json
+import json
+import time
+
 from six.moves.urllib import parse as urllib
 from tempest_lib import exceptions as lib_exc
 
 from tempest.api_schema.response.compute.v2_1 import volumes as schema
 from tempest.common import service_client
+from tempest import exceptions
 
 
 class VolumesExtensionsClient(service_client.ServiceClient):
@@ -77,6 +80,26 @@ class VolumesExtensionsClient(service_client.ServiceClient):
         resp, body = self.delete("os-volumes/%s" % volume_id)
         self.validate_response(schema.delete_volume, resp, body)
         return service_client.ResponseBody(resp, body)
+
+    def wait_for_volume_status(self, volume_id, status):
+        """Waits for a Volume to reach a given status."""
+        body = self.show_volume(volume_id)
+        volume_status = body['status']
+        start = int(time.time())
+
+        while volume_status != status:
+            time.sleep(self.build_interval)
+            body = self.show_volume(volume_id)
+            volume_status = body['status']
+            if volume_status == 'error':
+                raise exceptions.VolumeBuildErrorException(volume_id=volume_id)
+
+            if int(time.time()) - start >= self.build_timeout:
+                message = ('Volume %s failed to reach %s status (current %s) '
+                           'within the required time (%s s).' %
+                           (volume_id, status, volume_status,
+                            self.build_timeout))
+                raise exceptions.TimeoutException(message)
 
     def is_resource_deleted(self, id):
         try:

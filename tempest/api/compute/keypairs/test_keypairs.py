@@ -13,12 +13,29 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from tempest.api.compute.keypairs import base
-from tempest.common.utils import data_utils
+from tempest_lib.common.utils import data_utils
+
+from tempest.api.compute import base
 from tempest import test
 
 
-class KeyPairsV2TestJSON(base.BaseKeypairTest):
+class KeyPairsV2TestJSON(base.BaseComputeTest):
+
+    _api_version = 2
+
+    @classmethod
+    def setup_clients(cls):
+        super(KeyPairsV2TestJSON, cls).setup_clients()
+        cls.client = cls.keypairs_client
+
+    def _delete_keypair(self, keypair_name):
+        self.client.delete_keypair(keypair_name)
+
+    def _create_keypair(self, keypair_name, pub_key=None):
+        body = self.client.create_keypair(keypair_name, pub_key)
+        self.addCleanup(self._delete_keypair, keypair_name)
+        return body
+
     @test.idempotent_id('1d1dbedb-d7a0-432a-9d09-83f543c3c19b')
     def test_keypairs_create_list_delete(self):
         # Keypairs created should be available in the response list

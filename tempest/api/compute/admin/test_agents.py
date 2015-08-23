@@ -13,10 +13,10 @@
 #    under the License.
 
 from oslo_log import log
+from tempest_lib.common.utils import data_utils
 from tempest_lib import exceptions as lib_exc
 
 from tempest.api.compute import base
-from tempest.common.utils import data_utils
 from tempest import test
 
 LOG = log.getLogger(__name__)
@@ -109,7 +109,8 @@ class AgentsAdminTestJSON(base.BaseV2ComputeAdminTest):
         self.addCleanup(self.client.delete_agent, agent_xen['agent_id'])
 
         agent_id_xen = agent_xen['agent_id']
-        agents = self.client.list_agents(hypervisor=agent_xen['hypervisor'])
+        params_filter = {'hypervisor': agent_xen['hypervisor']}
+        agents = self.client.list_agents(params_filter)
         self.assertTrue(len(agents) > 0, 'Cannot get any agents.(%s)' % agents)
         self.assertIn(agent_id_xen, map(lambda x: x['agent_id'], agents))
         self.assertNotIn(self.agent_id, map(lambda x: x['agent_id'], agents))

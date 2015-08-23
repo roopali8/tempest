@@ -12,8 +12,6 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from tempest.api_schema.response.compute.v2_1 import parameter_types
-
 get_fixed_ip = {
     'status_code': [200],
     'response_body': {
@@ -22,7 +20,10 @@ get_fixed_ip = {
             'fixed_ip': {
                 'type': 'object',
                 'properties': {
-                    'address': parameter_types.ip_address,
+                    'address': {
+                        'type': 'string',
+                        'format': 'ip-address'
+                    },
                     'cidr': {'type': 'string'},
                     'host': {'type': 'string'},
                     'hostname': {'type': 'string'}

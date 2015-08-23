@@ -13,9 +13,9 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from tempest_lib.common.utils import data_utils
+
 from tempest.api.compute import base
-from tempest.common.utils import data_utils
-from tempest.common import waiters
 from tempest import test
 
 
@@ -35,7 +35,7 @@ class ServersTestJSON(base.BaseV2ComputeTest):
         # If an admin password is provided on server creation, the server's
         # root password should be set to that password.
         server = self.create_test_server(adminPass='testpassword')
-        waiters.wait_for_server_status(self.client, server['id'], "ACTIVE")
+        self.client.wait_for_server_status(server['id'], "ACTIVE")
         # Verify the password is set correctly in the response
         self.assertEqual('testpassword', server['adminPass'])
 
@@ -63,11 +63,11 @@ class ServersTestJSON(base.BaseV2ComputeTest):
         # Specify a keypair while creating a server
 
         key_name = data_utils.rand_name('key')
-        self.keypairs_client.create_keypair(name=key_name)
+        self.keypairs_client.create_keypair(key_name)
         self.addCleanup(self.keypairs_client.delete_keypair, key_name)
         self.keypairs_client.list_keypairs()
         server = self.create_test_server(key_name=key_name)
-        waiters.wait_for_server_status(self.client, server['id'], 'ACTIVE')
+        self.client.wait_for_server_status(server['id'], 'ACTIVE')
         server = self.client.show_server(server['id'])
         self.assertEqual(key_name, server['key_name'])
 
@@ -77,7 +77,7 @@ class ServersTestJSON(base.BaseV2ComputeTest):
         # Update the server with a new name
         self.client.update_server(server_id,
                                   name=new_name)
-        waiters.wait_for_server_status(self.client, server_id, status)
+        self.client.wait_for_server_status(server_id, status)
 
         # Verify the name of the server has changed
         server = self.client.show_server(server_id)
@@ -96,7 +96,7 @@ class ServersTestJSON(base.BaseV2ComputeTest):
         # The server name should be changed to the the provided value
         server = self.create_test_server(wait_until='ACTIVE')
         self.client.stop(server['id'])
-        waiters.wait_for_server_status(self.client, server['id'], 'SHUTOFF')
+        self.client.wait_for_server_status(server['id'], 'SHUTOFF')
         updated_server = self._update_server_name(server['id'], 'SHUTOFF')
         self.assertNotIn('progress', updated_server)
 
@@ -109,7 +109,7 @@ class ServersTestJSON(base.BaseV2ComputeTest):
         self.client.update_server(server['id'],
                                   accessIPv4='1.1.1.1',
                                   accessIPv6='::babe:202:202')
-        waiters.wait_for_server_status(self.client, server['id'], 'ACTIVE')
+        self.client.wait_for_server_status(server['id'], 'ACTIVE')
 
         # Verify the access addresses have been updated
         server = self.client.show_server(server['id'])
@@ -120,6 +120,6 @@ class ServersTestJSON(base.BaseV2ComputeTest):
     def test_create_server_with_ipv6_addr_only(self):
         # Create a server without an IPv4 address(only IPv6 address).
         server = self.create_test_server(accessIPv6='2001:2001::3')
-        waiters.wait_for_server_status(self.client, server['id'], 'ACTIVE')
+        self.client.wait_for_server_status(server['id'], 'ACTIVE')
         server = self.client.show_server(server['id'])
         self.assertEqual('2001:2001::3', server['accessIPv6'])

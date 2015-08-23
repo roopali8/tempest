@@ -13,13 +13,14 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
-from oslo_serialization import jsonutils as json
-import six
+import json
+import time
+
 from six.moves.urllib import parse as urllib
 from tempest_lib import exceptions as lib_exc
 
 from tempest.common import service_client
-from tempest.common import waiters
+from tempest import exceptions
 
 
 class BaseVolumesClient(service_client.ServiceClient):
@@ -39,57 +40,18 @@ class BaseVolumesClient(service_client.ServiceClient):
         """Return the element 'attachment' from input volumes."""
         return volume['attachments'][0]
 
-    def _ext_get(self, url, key=None, status=200):
-        """Extended get method.
-
-        Retrieves requested url, checks that status is expected status and
-        return a ResponseBody, ResponseBodyList or ResponseBodyData depending
-        on received data's key entry.
-
-        If key is not specified or is None we will return the whole body in a
-        ResponseBody class.
-        """
-
-        resp, body = self.get(url)
-        body = json.loads(body)
-        self.expected_success(status, resp.status)
-
-        if not key:
-            return service_client.ResponseBody(resp, body)
-        elif isinstance(body[key], dict):
-            return service_client.ResponseBody(resp, body[key])
-        elif isinstance(body[key], list):
-            return service_client.ResponseBodyList(resp, body[key])
-
-        return service_client.ResponseBodyData(resp, body[key])
-
-    def _prepare_params(self, params):
-        """Prepares params for use in get or _ext_get methods.
-
-        If params is a string it will be left as it is, but if it's not it will
-        be urlencoded.
-        """
-        if isinstance(params, six.string_types):
-            return params
-        return urllib.urlencode(params)
-
-    def list_volumes(self, detail=False, params=None, return_body=False):
-        """List all the volumes created.
-
-        Params can be a string (must be urlencoded) or a dictionary.
-        If return_body is True then we will return the whole response body in
-        a ResponseBody class, it it's False or has not been specified we will
-        return only the list of volumes in a ResponseBodyList (inherits from
-        list).
-        """
+    def list_volumes(self, detail=False, params=None):
+        """List all the volumes created."""
         url = 'volumes'
         if detail:
             url += '/detail'
         if params:
-            url += '?%s' % self._prepare_params(params)
+            url += '?%s' % urllib.urlencode(params)
 
-        key = None if return_body else 'volumes'
-        return self._ext_get(url, key)
+        resp, body = self.get(url)
+        body = json.loads(body)
+        self.expected_success(200, resp.status)
+        return service_client.ResponseBodyList(resp, body['volumes'])
 
     def show_volume(self, volume_id):
         """Returns the details of a single volume."""
@@ -199,7 +161,25 @@ class BaseVolumesClient(service_client.ServiceClient):
 
     def wait_for_volume_status(self, volume_id, status):
         """Waits for a Volume to reach a given status."""
-        waiters.wait_for_volume_status(self, volume_id, status)
+        body = self.show_volume(volume_id)
+        volume_status = body['status']
+        start = int(time.time())
+
+        while volume_status != status:
+            time.sleep(self.build_interval)
+            body = self.show_volume(volume_id)
+            volume_status = body['status']
+            if volume_status == 'error':
+                raise exceptions.VolumeBuildErrorException(volume_id=volume_id)
+
+            if int(time.time()) - start >= self.build_timeout:
+                message = ('Volume %s failed to reach %s status (current: %s) '
+                           'within the required time '
+                           '(%s s).' % (volume_id,
+                                        status,
+                                        volume_status,
+                                        self.build_timeout))
+                raise exceptions.TimeoutException(message)
 
     def is_resource_deleted(self, id):
         try:

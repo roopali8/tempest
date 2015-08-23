@@ -14,8 +14,6 @@
 
 import copy
 
-from tempest.api_schema.response.compute.v2_1 import parameter_types
-
 get_hypervisor_statistics = {
     'status_code': [200],
     'response_body': {
@@ -59,7 +57,10 @@ hypervisor_detail = {
         'cpu_info': {'type': 'string'},
         'current_workload': {'type': 'integer'},
         'disk_available_least': {'type': ['integer', 'null']},
-        'host_ip': parameter_types.ip_address,
+        'host_ip': {
+            'type': 'string',
+            'format': 'ip-address'
+        },
         'free_disk_gb': {'type': 'integer'},
         'free_ram_mb': {'type': 'integer'},
         'hypervisor_hostname': {'type': 'string'},

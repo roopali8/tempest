@@ -31,8 +31,8 @@ LOG = logging.getLogger(__name__)
 
 
 def read_accounts_yaml(path):
-    with open(path, 'r') as yaml_file:
-        accounts = yaml.load(yaml_file)
+    yaml_file = open(path, 'r')
+    accounts = yaml.load(yaml_file)
     return accounts
 
 
@@ -216,7 +216,7 @@ class Accounts(cred_provider.CredentialProvider):
             if ('user_domain_name' in init_attributes and 'user_domain_name'
                     not in hash_attributes):
                 # Allow for the case of domain_name populated from config
-                domain_name = CONF.auth.default_credentials_domain_name
+                domain_name = CONF.identity.admin_domain_name
                 hash_attributes['user_domain_name'] = domain_name
             if all([getattr(creds, k) == hash_attributes[k] for
                    k in init_attributes]):

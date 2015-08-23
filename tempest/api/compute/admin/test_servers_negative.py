@@ -14,13 +14,12 @@
 
 import uuid
 
+from tempest_lib.common.utils import data_utils
 from tempest_lib import exceptions as lib_exc
 import testtools
 
 from tempest.api.compute import base
 from tempest.common import tempest_fixtures as fixtures
-from tempest.common.utils import data_utils
-from tempest.common import waiters
 from tempest import config
 from tempest import test
 
@@ -73,9 +72,9 @@ class ServersAdminNegativeTestJSON(base.BaseV2ComputeAdminTest):
         ram = int(quota_set['ram']) + 1
         vcpus = 8
         disk = 10
-        flavor_ref = self.flavors_client.create_flavor(name=flavor_name,
-                                                       ram=ram, vcpus=vcpus,
-                                                       disk=disk, id=flavor_id)
+        flavor_ref = self.flavors_client.create_flavor(flavor_name,
+                                                       ram, vcpus, disk,
+                                                       flavor_id)
         self.addCleanup(self.flavors_client.delete_flavor, flavor_id)
         self.assertRaises((lib_exc.Forbidden, lib_exc.OverLimit),
                           self.client.resize,
@@ -95,9 +94,9 @@ class ServersAdminNegativeTestJSON(base.BaseV2ComputeAdminTest):
         quota_set = self.quotas_client.show_default_quota_set(self.tenant_id)
         vcpus = int(quota_set['cores']) + 1
         disk = 10
-        flavor_ref = self.flavors_client.create_flavor(name=flavor_name,
-                                                       ram=ram, vcpus=vcpus,
-                                                       disk=disk, id=flavor_id)
+        flavor_ref = self.flavors_client.create_flavor(flavor_name,
+                                                       ram, vcpus, disk,
+                                                       flavor_id)
         self.addCleanup(self.flavors_client.delete_flavor, flavor_id)
         self.assertRaises((lib_exc.Forbidden, lib_exc.OverLimit),
                           self.client.resize,
@@ -152,8 +151,7 @@ class ServersAdminNegativeTestJSON(base.BaseV2ComputeAdminTest):
         server_id = server['id']
         # suspend the server.
         self.client.suspend_server(server_id)
-        waiters.wait_for_server_status(self.client,
-                                       server_id, 'SUSPENDED')
+        self.client.wait_for_server_status(server_id, 'SUSPENDED')
         # migrate an suspended server should fail
         self.assertRaises(lib_exc.Conflict,
                           self.client.migrate_server,

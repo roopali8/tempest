@@ -17,12 +17,11 @@ import time
 
 from oslo_log import log as logging
 import six
+from tempest_lib.common.utils import data_utils
 from tempest_lib import decorators
 import testtools
 
 from tempest.api.compute import base
-from tempest.common.utils import data_utils
-from tempest.common import waiters
 from tempest import config
 from tempest import test
 
@@ -63,7 +62,7 @@ class ListImageFiltersTestJSON(base.BaseV2ComputeTest):
             time.sleep(1)
             image_file = six.StringIO(('*' * 1024))
             cls.glance_client.update_image(image_id, data=image_file)
-            waiters.wait_for_image_status(cls.client, image_id, 'ACTIVE')
+            cls.client.wait_for_image_status(image_id, 'ACTIVE')
             body = cls.client.show_image(image_id)
             return body
 
@@ -82,8 +81,8 @@ class ListImageFiltersTestJSON(base.BaseV2ComputeTest):
         cls.server1 = cls.create_test_server()
         cls.server2 = cls.create_test_server(wait_until='ACTIVE')
         # NOTE(sdague) this is faster than doing the sync wait_util on both
-        waiters.wait_for_server_status(cls.servers_client,
-                                       cls.server1['id'], 'ACTIVE')
+        cls.servers_client.wait_for_server_status(cls.server1['id'],
+                                                  'ACTIVE')
 
         # Create images to be used in the filter tests
         cls.snapshot1 = cls.create_image_from_server(
