@@ -18,6 +18,7 @@ from tempest.common import cred_provider
 from tempest.common import isolated_creds
 from tempest import config
 from tempest import exceptions
+import random
 
 CONF = config.CONF
 
@@ -91,3 +92,42 @@ def is_alt_available():
             return True
     except exceptions.InvalidConfiguration:
         return False
+
+def get_policy_password():
+    pw_min_len = CONF.identity.policy_min_length
+    mypw = ""
+
+    u_case = CONF.identity.policy_num_uppercase
+    if u_case > 0:
+        for i in range(u_case):
+            set = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            next_index = random.randrange(len(set))
+            mypw += set[next_index]
+
+    l_case = CONF.identity.policy_num_lowercase
+    if l_case > 0:
+        for i in range(l_case):
+            set = "abcdefghijklmnopqrstuvwxyz"
+            next_index = random.randrange(len(set))
+            mypw += set[next_index]
+
+    numeric = CONF.identity.policy_num_numeric
+    if numeric > 0:
+        for i in range(numeric):
+            nums = "0123456789"
+            next_index = random.randrange(len(nums))
+            mypw += nums[next_index]
+
+    specialchar = CONF.identity.policy_num_specialchars
+    if specialchar > 0:
+        for i in range(specialchar):
+            s_chars = "~!@#$%^&*()_+-=:';,./<>""?{}[]\|"
+            next_index = random.randrange(len(s_chars))
+            mypw += s_chars[next_index]
+
+    if len(mypw) < pw_min_len:
+        for x in range(len(mypw), pw_min_len):
+            alphabet = "abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            next_index = random.randrange(len(alphabet))
+            mypw += alphabet[next_index]
+    return mypw
